@@ -150,7 +150,7 @@ exports.login=async(req,res)=>{
             const payload={
                 email:user.email,
                 id:user._id,
-                role:user.role,
+                accountType:user.accountType,
             }
             const token=jwt.sign(payload,process.env.JWT_SECRET,{
                 expiresIn:"2h",
@@ -188,5 +188,14 @@ exports.login=async(req,res)=>{
 
 }
 exports.changePassword=async(req,res)=>{
+    try{
+
+    }
+    catch(err){
+        return res.status(500).json({
+            success:false,
+            message:'User role cannot be verified'
+        })
+    }
 
 }
