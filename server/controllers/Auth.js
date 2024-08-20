@@ -187,15 +187,66 @@ exports.login=async(req,res)=>{
     }
 
 }
-exports.changePassword=async(req,res)=>{
-    try{
-
-    }
-    catch(err){
+exports.changePassword = async (req, res) => {
+    try {
+   
+      const userDetails = await User.findById(req.user.id)
+  
+      
+      const { oldPassword, newPassword } = req.body
+  
+      
+      const isPasswordMatch = await bcrypt.compare(
+        oldPassword,
+        userDetails.password
+      )
+      if (!isPasswordMatch) {
+        
+        return res
+          .status(401)
+          .json({ success: false, message: "The password is incorrect" })
+      }
+  
+  
+      const encryptedPassword = await bcrypt.hash(newPassword, 10)
+      const updatedUserDetails = await User.findByIdAndUpdate(
+        req.user.id,
+        { password: encryptedPassword },
+        { new: true }
+      )
+  
+    
+      try {
+        const emailResponse = await mailSender(
+          updatedUserDetails.email,
+          "Password for your account has been updated",
+          passwordUpdated(
+            updatedUserDetails.email,
+            `Password updated successfully for ${updatedUserDetails.firstName} ${updatedUserDetails.lastName}`
+          )
+        )
+        console.log("Email sent successfully:", emailResponse.response)
+      } catch (error) {
+       
+        console.error("Error occurred while sending email:", error)
         return res.status(500).json({
-            success:false,
-            message:'User role cannot be verified'
+          success: false,
+          message: "Error occurred while sending email",
+          error: error.message,
         })
+      }
+  
+    
+      return res
+        .status(200)
+        .json({ success: true, message: "Password updated successfully" })
+    } catch (error) {
+     
+      console.error("Error occurred while updating password:", error)
+      return res.status(500).json({
+        success: false,
+        message: "Error occurred while updating password",
+        error: error.message,
+      })
     }
-
-}
+  }
