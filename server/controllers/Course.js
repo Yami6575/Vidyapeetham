@@ -6,13 +6,13 @@ const User = require("../models/User")
 const { uploadImageToCloudinary } = require("../utils/imageUploader")
 const CourseProgress = require("../models/CourseProgress")
 const { convertSecondsToDuration } = require("../utils/secToDuration")
-// Function to create a new course
+
 exports.createCourse = async (req, res) => {
   try {
-    // Get user ID from request object
+    
     const userId = req.user.id
 
-    // Get all required fields from request body
+    
     let {
       courseName,
       courseDescription,
@@ -23,17 +23,16 @@ exports.createCourse = async (req, res) => {
       status,
       instructions: _instructions,
     } = req.body
-    // Get thumbnail image from request files
+
     const thumbnail = req.files.thumbnailImage
 
-    // Convert the tag and instructions from stringified Array to Array
+    
     const tag = JSON.parse(_tag)
     const instructions = JSON.parse(_instructions)
 
     console.log("tag", tag)
     console.log("instructions", instructions)
 
-    // Check if any of the required fields are missing
     if (
       !courseName ||
       !courseDescription ||
@@ -52,7 +51,6 @@ exports.createCourse = async (req, res) => {
     if (!status || status === undefined) {
       status = "Draft"
     }
-    // Check if the user is an instructor
     const instructorDetails = await User.findById(userId, {
       accountType: "Instructor",
     })
@@ -64,7 +62,6 @@ exports.createCourse = async (req, res) => {
       })
     }
 
-    // Check if the tag given is valid
     const categoryDetails = await Category.findById(category)
     if (!categoryDetails) {
       return res.status(404).json({
@@ -72,13 +69,11 @@ exports.createCourse = async (req, res) => {
         message: "Category Details Not Found",
       })
     }
-    // Upload the Thumbnail to Cloudinary
     const thumbnailImage = await uploadImageToCloudinary(
       thumbnail,
       process.env.FOLDER_NAME
     )
     console.log(thumbnailImage)
-    // Create a new course with the given details
     const newCourse = await Course.create({
       courseName,
       courseDescription,
@@ -131,7 +126,6 @@ exports.createCourse = async (req, res) => {
     })
   }
 }
-// Edit Course Details
 exports.editCourse = async (req, res) => {
   try {
     const { courseId } = req.body
@@ -142,7 +136,6 @@ exports.editCourse = async (req, res) => {
       return res.status(404).json({ error: "Course not found" })
     }
 
-    // If Thumbnail Image is found, update it
     if (req.files) {
       console.log("thumbnail update")
       const thumbnail = req.files.thumbnailImage
