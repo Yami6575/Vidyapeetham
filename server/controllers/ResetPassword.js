@@ -1,5 +1,6 @@
 const User=require("../models/User");
 const mailSender=require("../utils/mailSender");
+const bcrypt=require("bcrypt")
 
 exports.resetPasswordToken=async(req,res)=>{
     try{
@@ -34,12 +35,47 @@ exports.resetPasswordToken=async(req,res)=>{
     
 }
 exports.resetPassword= async (req,res)=>{
-    const {password,confirmPassword,token}=req.body;
+    try{
+        const {password,confirmPassword,token}=req.body;
     if(password!=confirmPassword){
         return res.json({
             success:false,
             message:"Password not matching"
         })
+    }
+    const userDetails=await User.fineOne({token:token});
+    if(!userDetails){
+        return res.json({
+            success:false,
+            message:"Token is invalid"
+        })
+    }
+    if(userDetails.resetPasswordExpires<Date.now()){
+        return res.json({
+            success:false,
+            message:'Token is expired,please regenerate your token  '
+        })
+
+    }
+    const hashedPassword=await bcrypt.hash(password,10);
+    await User.findOneAndUpdate(
+        {token:token},
+        {password:hashedPassword},
+        {new:true}
+    )
+    return res.status(200).json({
+        success:true,
+        message:'password reset successful'
+    })
+
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success:false,
+            message:'did not work reset password'
+        })
+
     }
 
 }
